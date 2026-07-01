@@ -24,8 +24,7 @@ medicare_add_row_num as (
         , medicare_provider_supplier_type_description
         , row_number() over (
             partition by provider_taxonomy_code
-            /* using try_cast since some codes are alphanumeric */
-            order by try_cast(medicare_specialty_code as number) desc
+            order by medicare_specialty_code desc
         ) as row_num
     from medicare
     where provider_taxonomy_code is not null

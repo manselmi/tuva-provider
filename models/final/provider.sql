@@ -105,24 +105,24 @@ select
         end as entity_type_description
     , primary_taxonomy.taxonomy_code as primary_taxonomy_code
     , primary_taxonomy.description as primary_specialty_description
-    , initcap(npi_expanded.provider_first_name) as provider_first_name
-    , initcap(npi_expanded.provider_last_name) as provider_last_name
+    , npi_expanded.provider_first_name as provider_first_name
+    , npi_expanded.provider_last_name as provider_last_name
     , npi_expanded.provider_credential_text as provider_credential
-    , initcap(npi_expanded.provider_organization_name) as provider_organization_name
-    , initcap(npi_expanded.provider_other_organization_name) as provider_other_organization_name
+    , npi_expanded.provider_organization_name as provider_organization_name
+    , npi_expanded.provider_other_organization_name as provider_other_organization_name
     , npi_expanded.provider_other_organization_name_type_code as provider_other_organization_name_type_code
     , npi_expanded.provider_other_organization_name_type_description as provider_other_organization_name_type_description
-    , initcap(npi_expanded.parent_organization_lbn) as parent_organization_name
-    , initcap(npi_expanded.provider_first_line_business_practice_location_address) as practice_address_line_1
-    , initcap(npi_expanded.provider_second_line_business_practice_location_address) as practice_address_line_2
-    , initcap(npi_expanded.provider_business_practice_location_address_city_name) as practice_city
+    , npi_expanded.parent_organization_lbn as parent_organization_name
+    , npi_expanded.provider_first_line_business_practice_location_address as practice_address_line_1
+    , npi_expanded.provider_second_line_business_practice_location_address as practice_address_line_2
+    , npi_expanded.provider_business_practice_location_address_city_name as practice_city
     , npi_expanded.provider_business_practice_location_address_state_name as practice_state
     , npi_expanded.provider_business_practice_location_address_postal_code as practice_zip_code
     , npi_expanded.provider_business_mailing_address_telephone_number as mailing_telephone_number
     , npi_expanded.provider_business_practice_location_address_telephone_number as location_telephone_number
     , npi_expanded.authorized_official_telephone_number as official_telephone_number
-    , cast(last_update_date as date) as last_updated
-    , cast(npi_deactivation_date as date) as deactivation_date
+    , {{ try_to_cast_date('last_update_date', 'MM/DD/YYYY') }} as last_updated
+    , {{ try_to_cast_date('npi_deactivation_date', 'MM/DD/YYYY') }} as deactivation_date
     , case
         when npi_deactivation_date is not null then 1
         else 0
