@@ -1,84 +1,50 @@
-with npi_source as (
+/*
+    Unpivots the 15 wide taxonomy code/switch column pairs into one row per
+    (npi, taxonomy slot).
 
-        select
-              npi
-            , healthcare_provider_taxonomy_code_1
-            , healthcare_provider_primary_taxonomy_switch_1
-            , healthcare_provider_taxonomy_code_2
-            , healthcare_provider_primary_taxonomy_switch_2
-            , healthcare_provider_taxonomy_code_3
-            , healthcare_provider_primary_taxonomy_switch_3
-            , healthcare_provider_taxonomy_code_4
-            , healthcare_provider_primary_taxonomy_switch_4
-            , healthcare_provider_taxonomy_code_5
-            , healthcare_provider_primary_taxonomy_switch_5
-            , healthcare_provider_taxonomy_code_6
-            , healthcare_provider_primary_taxonomy_switch_6
-            , healthcare_provider_taxonomy_code_7
-            , healthcare_provider_primary_taxonomy_switch_7
-            , healthcare_provider_taxonomy_code_8
-            , healthcare_provider_primary_taxonomy_switch_8
-            , healthcare_provider_taxonomy_code_9
-            , healthcare_provider_primary_taxonomy_switch_9
-            , healthcare_provider_taxonomy_code_10
-            , healthcare_provider_primary_taxonomy_switch_10
-            , healthcare_provider_taxonomy_code_11
-            , healthcare_provider_primary_taxonomy_switch_11
-            , healthcare_provider_taxonomy_code_12
-            , healthcare_provider_primary_taxonomy_switch_12
-            , healthcare_provider_taxonomy_code_13
-            , healthcare_provider_primary_taxonomy_switch_13
-            , healthcare_provider_taxonomy_code_14
-            , healthcare_provider_primary_taxonomy_switch_14
-            , healthcare_provider_taxonomy_code_15
-            , healthcare_provider_primary_taxonomy_switch_15
-        from {{ source('nppes', 'npi') }}
+    dbt_utils.unpivot only unpivots a single value column set, so the paired
+    code + switch columns are unpivoted separately (from the int_provider_taxonomy_*
+    staging models) and rejoined on the numeric slot suffix. This keeps the model
+    cross-database compatible (Snowflake / Postgres / Redshift / DuckDB).
 
-),
+    cast_to uses dbt.type_string() so the string type resolves per adapter
+    (varchar / string / text) — no per-warehouse edits needed.
+*/
 
-unpivot as (
+with codes as (
 
-    select *
-    from npi_source
-    /* unpivot taxonomy code */
-    unpivot(taxonomy_code for taxonomy_col in (   healthcare_provider_taxonomy_code_1
-                                                , healthcare_provider_taxonomy_code_2
-                                                , healthcare_provider_taxonomy_code_3
-                                                , healthcare_provider_taxonomy_code_4
-                                                , healthcare_provider_taxonomy_code_5
-                                                , healthcare_provider_taxonomy_code_6
-                                                , healthcare_provider_taxonomy_code_7
-                                                , healthcare_provider_taxonomy_code_8
-                                                , healthcare_provider_taxonomy_code_9
-                                                , healthcare_provider_taxonomy_code_10
-                                                , healthcare_provider_taxonomy_code_11
-                                                , healthcare_provider_taxonomy_code_12
-                                                , healthcare_provider_taxonomy_code_13
-                                                , healthcare_provider_taxonomy_code_14
-                                                , healthcare_provider_taxonomy_code_15
-                                              )
-    )
-    /* unpivot primary indicator for each taxonomy */
-    unpivot(taxonomy_switch for switch_col in (   healthcare_provider_primary_taxonomy_switch_1
-                                                , healthcare_provider_primary_taxonomy_switch_2
-                                                , healthcare_provider_primary_taxonomy_switch_3
-                                                , healthcare_provider_primary_taxonomy_switch_4
-                                                , healthcare_provider_primary_taxonomy_switch_5
-                                                , healthcare_provider_primary_taxonomy_switch_6
-                                                , healthcare_provider_primary_taxonomy_switch_7
-                                                , healthcare_provider_primary_taxonomy_switch_8
-                                                , healthcare_provider_primary_taxonomy_switch_9
-                                                , healthcare_provider_primary_taxonomy_switch_10
-                                                , healthcare_provider_primary_taxonomy_switch_11
-                                                , healthcare_provider_primary_taxonomy_switch_12
-                                                , healthcare_provider_primary_taxonomy_switch_13
-                                                , healthcare_provider_primary_taxonomy_switch_14
-                                                , healthcare_provider_primary_taxonomy_switch_15
-                                              )
-    )
-    /* join each taxonomy with its primary indicator */
-    where regexp_replace(taxonomy_col,'[^[:digit:]]','') = regexp_replace(switch_col,'[^[:digit:]]','')
+    {{ dbt_utils.unpivot(
+        relation=ref('int_provider_taxonomy_codes'),
+        cast_to=dbt.type_string(),
+        exclude=['npi'],
+        field_name='taxonomy_col',
+        value_name='taxonomy_code'
+    ) }}
 
 )
 
-select * from unpivot
+, switches as (
+
+    {{ dbt_utils.unpivot(
+        relation=ref('int_provider_taxonomy_switches'),
+        cast_to=dbt.type_string(),
+        exclude=['npi'],
+        field_name='switch_col',
+        value_name='taxonomy_switch'
+    ) }}
+
+)
+
+select
+      codes.npi
+    , upper(codes.taxonomy_col) as taxonomy_col
+    , codes.taxonomy_code
+    , upper(switches.switch_col) as switch_col
+    , switches.taxonomy_switch
+from codes
+inner join switches
+    on codes.npi = switches.npi
+    /* pair code_N with switch_N by the trailing slot number */
+    and replace(codes.taxonomy_col, 'healthcare_provider_taxonomy_code_', '')
+        = replace(switches.switch_col, 'healthcare_provider_primary_taxonomy_switch_', '')
+where codes.taxonomy_code is not null
