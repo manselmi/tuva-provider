@@ -9,3 +9,4 @@ dbt_packages/
 profiles.yml
 .venv
 .user.yml
+.data/
