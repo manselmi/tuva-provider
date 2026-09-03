@@ -38,6 +38,18 @@ models:
       - name: entity_type_description
         description: Type of provider "Individual" or "Organization"
 
+      - name: sole_proprietor_code
+        description: >
+          Proprietor code X (Not Answered),
+          Y [Yes, Entity Type 1 Provider (Individual) is a Sole Proprietor] or
+          N [No, Entity Type 1 Provider (Individual) is not a Sole Proprietor]
+
+      - name: sole_proprietor_description
+        description: >
+          Description of proprietor code "Not Answered",
+          "Yes, Entity Type 1 Provider (Individual) is a Sole Proprietor" or
+          "No, Entity Type 1 Provider (Individual) is not a Sole Proprietor"
+
       - name: primary_taxonomy_code
         description: Primary taxonomy code
 

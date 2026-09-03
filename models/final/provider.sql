@@ -3,6 +3,7 @@ with npi_source as (
     select
           npi
         , entity_type_code
+        , is_sole_proprietor
         , provider_last_name
         , provider_first_name
         , provider_credential_text
@@ -61,6 +62,7 @@ with npi_source as (
     select
           npi_source.npi
         , npi_source.entity_type_code
+        , npi_source.is_sole_proprietor
         , npi_source.provider_last_name
         , npi_source.provider_first_name
         , npi_source.provider_credential_text
@@ -103,6 +105,12 @@ select
         when npi_expanded.entity_type_code = '1' then 'Individual'
         when npi_expanded.entity_type_code = '2' then 'Organization'
         end as entity_type_description
+    , npi_expanded.is_sole_proprietor as sole_proprietor_code
+    , case
+        when npi_expanded.is_sole_proprietor = 'X' then 'Not Answered'
+        when npi_expanded.is_sole_proprietor = 'Y' then 'Yes, Entity Type 1 Provider (Individual) is a Sole Proprietor'
+        when npi_expanded.is_sole_proprietor = 'N' then 'No, Entity Type 1 Provider (Individual) is not a Sole Proprietor'
+        end as sole_proprietor_description
     , primary_taxonomy.taxonomy_code as primary_taxonomy_code
     , primary_taxonomy.description as primary_specialty_description
     , npi_expanded.provider_first_name as provider_first_name
