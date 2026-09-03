@@ -1,0 +1,9 @@
+default:
+  target: 'local'
+  outputs:
+    local:
+      path: 'data/nppes.duckdb'
+      settings:
+        threads: 2
+      threads: 4
+      type: 'duckdb'

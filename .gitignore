@@ -6,7 +6,10 @@ logs/
 .DS_Store
 dbt_packages/
 .env
-profiles.yml
 .venv
 .user.yml
 .data/
+*.csv
+*.duckdb
+*.parquet
+*.wal
