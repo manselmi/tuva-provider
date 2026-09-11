@@ -1,11 +1,14 @@
-COPY
-  (
-    SELECT *
-    FROM claims_data_model.provider
-    ORDER BY npi
-  )
-  TO 'data/provider.parquet'
-  (
-    FORMAT parquet,
-    COMPRESSION zstd
-  );
+.cd data
+
+USE claims_data_model;
+
+COPY (
+  SELECT *
+  FROM provider
+  ORDER BY npi
+)
+TO 'provider.parquet'
+WITH (
+  FORMAT parquet,
+  COMPRESSION zstd
+);

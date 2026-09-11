@@ -1,3 +1,8 @@
+# https://docs.getdbt.com/docs/local/profiles.yml
+# https://docs.getdbt.com/reference/dbt-jinja-functions/profiles-yml-context
+# https://github.com/duckdb/dbt-duckdb#readme
+
+
 default:
   target: 'local'
   outputs:

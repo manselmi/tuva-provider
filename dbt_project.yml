@@ -1,20 +1,39 @@
+# https://docs.getdbt.com/reference/dbt_project.yml
+# https://docs.getdbt.com/reference/dbt-jinja-functions/dbt-project-yml-context
+
+
 name: 'generate_provider_data'
 version: '0.1.2'
 config-version: 2
 
 profile: 'default'
 
-model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-seed-paths: ["seeds"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
+model-paths: ['models']
+analysis-paths: ['analyses']
+test-paths: ['tests']
+seed-paths: ['seeds']
+macro-paths: ['macros']
+snapshot-paths: ['snapshots']
 
-target-path: "target"
+target-path: 'target'
 clean-targets:
-  - "target"
-  - "dbt_packages"
+  - 'dbt_packages'
+  - 'target'
+
+flags:
+  allow_jinja_file_extensions: true
+  cumulative_type_params: true
+  latest_version_pointer_enabled_by_default: true
+  require_corrected_analysis_fqns: true
+  require_ref_searches_node_package_before_root: true
+  require_source_and_semantic_model_names_without_spaces: true
+  require_sql_header_in_test_configs: true
+  require_unique_project_resource_names: true
+  require_valid_schema_from_generate_schema_name: true
+  send_anonymous_usage_stats: false
+  use_v2_parser: true
+  warn_error_options:
+    error: 'all'
 
 vars:
   # This variable sets the name of the database
@@ -23,4 +42,4 @@ vars:
   # in your data warehouse before you run this package,
   # since dbt can create schemas in your data warehouse,
   # but it cannot create databases.
-  provider_database: nppes
+  provider_database: 'nppes'

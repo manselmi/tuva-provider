@@ -18,11 +18,11 @@ nucc as (
 medicare_add_row_num as (
 
     select
-          provider_taxonomy_code
-        , provider_taxonomy_description
-        , medicare_specialty_code
-        , medicare_provider_supplier_type_description
-        , row_number() over (
+        provider_taxonomy_code,
+        provider_taxonomy_description,
+        medicare_specialty_code,
+        medicare_provider_supplier_type_description,
+        row_number() over (
             partition by provider_taxonomy_code
             order by medicare_specialty_code desc
         ) as row_num
@@ -34,9 +34,9 @@ medicare_add_row_num as (
 medicare_dedupe as (
 
     select
-          provider_taxonomy_code
-        , medicare_specialty_code
-        , medicare_provider_supplier_type_description
+        provider_taxonomy_code,
+        medicare_specialty_code,
+        medicare_provider_supplier_type_description
     from medicare_add_row_num
     where row_num = 1
 
@@ -52,36 +52,42 @@ medicare_dedupe as (
 joined as (
 
     select
-          nucc.code as taxonomy_code
-        , medicare_dedupe.medicare_specialty_code
-        , case
-            when medicare_dedupe.provider_taxonomy_code is not null
-              and medicare_dedupe.medicare_provider_supplier_type_description is not null
-              then medicare_dedupe.medicare_provider_supplier_type_description
+        nucc.code as taxonomy_code,
+        medicare_dedupe.medicare_specialty_code,
+        case
+            when
+                medicare_dedupe.provider_taxonomy_code is not null
+                and medicare_dedupe.medicare_provider_supplier_type_description is not null
+                then medicare_dedupe.medicare_provider_supplier_type_description
             else coalesce(nucc.specialization, nucc.classification)
-          end as description
+        end as description
     from nucc
-         left join medicare_dedupe
-         on nucc.code = medicare_dedupe.provider_taxonomy_code
+    left join medicare_dedupe
+        on nucc.code = medicare_dedupe.provider_taxonomy_code
 
 ),
 
 clean_description as (
 
-    select 
-          taxonomy_code
-        , medicare_specialty_code
-        , replace(                  
+    select
+        taxonomy_code,
+        medicare_specialty_code,
+        replace(
             regexp_replace(                     -- Remove content inside square brackets
                 regexp_replace(                 -- Remove content inside parentheses
                     replace(                    -- Replace commas with slashes
                         replace(
                             description,
-                            'Physician/', ''),
-                        ',', '/'),
-                    '\\s*\\([^\\)]*\\)', ''),
-                '\\s*\\[[^\\]]*\\]', ''),
-            '/ ', '/') AS description
+                            'Physician/', ''
+                        ),
+                        ',', '/'
+                    ),
+                    '\\s*\\([^\\)]*\\)', ''
+                ),
+                '\\s*\\[[^\\]]*\\]', ''
+            ),
+            '/ ', '/'
+        ) as description
     from joined
 
 )

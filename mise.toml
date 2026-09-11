@@ -1,0 +1,99 @@
+# https://github.com/jdx/mise/pull/13002
+min_version = '2026.9.4'
+
+
+[env]
+DB = 'data/nppes.duckdb'
+
+
+[settings]
+locked = true
+lockfile = true
+lockfile_platforms = [
+  'linux-arm64',
+  'linux-x64',
+  'macos-arm64',
+]
+
+[settings.python]
+compile = false
+
+
+[task_config]
+shell = 'sh -euo pipefail -c'
+
+
+[tasks.dbt-build]
+depends = [
+  'dbt-deps',
+]
+run = 'uv run -- dbt build'
+
+[tasks.dbt-compile]
+depends = [
+  'dbt-deps',
+]
+run = 'uv run -- dbt compile'
+
+[tasks.dbt-deps]
+outputs = [
+  'dbt_packages',
+]
+run = 'uv run -- dbt deps'
+sources = [
+  'dependencies.yml',
+  'package-lock.yml',
+]
+
+[tasks.default]
+run = [
+  { task = 'lint' },
+  { task = 'dbt-build' },
+]
+
+[tasks.dump]
+run = 'duckdb -bail -f dump.sql "${DB}"'
+
+[tasks.lint]
+depends = [
+  'dbt-compile',
+]
+run = """\
+if test -n "${CI:-}"; then \
+  CMD='sqlfluff lint'; \
+else \
+  CMD='sqlfluff fix --show-lint-violations'; \
+fi; \
+uv run --group lint -- ${CMD}"""
+
+[tasks.load]
+run = [
+  'rm -f -- "${DB}"',
+  'duckdb -bail -f load.sql "${DB}"',
+]
+
+[tasks.lock]
+# required to correctly initialize lockfile when locked = true
+env.MISE_LOCKED = '0'
+run = [
+  'mise install',
+  'mise lock',
+  'uv lock',
+  { task = 'dbt-deps' },
+]
+
+[tasks.upgrade]
+# required to correctly initialize lockfile when locked = true
+env.MISE_LOCKED = '0'
+run = [
+  'mise upgrade --local',
+  'mise lock',
+  'uv lock --upgrade',
+  'uv run -- dbt deps --upgrade',
+]
+
+
+[tools]
+duckdb = 'latest'
+python = '3.14'
+uv = 'latest'

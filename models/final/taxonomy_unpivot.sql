@@ -21,9 +21,9 @@ with codes as (
         value_name='taxonomy_code'
     ) }}
 
-)
+),
 
-, switches as (
+switches as (
 
     {{ dbt_utils.unpivot(
         relation=ref('int_provider_taxonomy_switches'),
@@ -36,15 +36,15 @@ with codes as (
 )
 
 select
-      codes.npi
-    , upper(codes.taxonomy_col) as taxonomy_col
-    , codes.taxonomy_code
-    , upper(switches.switch_col) as switch_col
-    , switches.taxonomy_switch
+    codes.npi,
+    upper(codes.taxonomy_col) as taxonomy_col,
+    codes.taxonomy_code,
+    upper(switches.switch_col) as switch_col,
+    switches.taxonomy_switch
 from codes
 inner join switches
     on codes.npi = switches.npi
     /* pair code_N with switch_N by the trailing slot number */
     and replace(codes.taxonomy_col, 'healthcare_provider_taxonomy_code_', '')
-        = replace(switches.switch_col, 'healthcare_provider_primary_taxonomy_switch_', '')
+    = replace(switches.switch_col, 'healthcare_provider_primary_taxonomy_switch_', '')
 where codes.taxonomy_code is not null
