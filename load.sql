@@ -1,7 +1,7 @@
 .cd raw
 
-SET VARIABLE npi = 'npidata_pfile_20050523-20260809.csv';
-SET VARIABLE npi_othername = 'othername_pfile_20050523-20260809.csv';
+SET VARIABLE npi = 'npidata_pfile_20050523-20260913.csv';
+SET VARIABLE npi_othername = 'othername_pfile_20050523-20260913.csv';
 SET VARIABLE nucc_taxonomy = 'nucc_taxonomy_261.csv';
 SET VARIABLE medicare_specialty_crosswalk = 'Medicare_Provider_and_Supplier_Taxonomy_Crosswalk_August_2026.csv';
 
