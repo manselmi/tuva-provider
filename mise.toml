@@ -27,19 +27,19 @@ shell = 'sh -euo pipefail -c'
 depends = [
   'dbt-deps',
 ]
-run = 'uv run -- dbt build'
+run = 'uv run --no-dev -- dbt build'
 
 [tasks.dbt-compile]
 depends = [
   'dbt-deps',
 ]
-run = 'uv run -- dbt compile'
+run = 'uv run --no-dev -- dbt compile'
 
 [tasks.dbt-deps]
 outputs = [
   'dbt_packages',
 ]
-run = 'uv run -- dbt deps'
+run = 'uv run --no-dev -- dbt deps'
 sources = [
   'dependencies.yml',
   'package-lock.yml',
@@ -81,6 +81,9 @@ run = [
   'uv lock',
   { task = 'dbt-deps' },
 ]
+
+[tasks.sync]
+run = 'uv sync'
 
 [tasks.upgrade]
 # required to correctly initialize lockfile when locked = true

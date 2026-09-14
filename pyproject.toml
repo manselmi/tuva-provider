@@ -3,6 +3,9 @@
 
 
 [dependency-groups]
+dev = [
+  { include-group = 'lint' },
+]
 lint = [
   'ruff >= 0.16.7',
   'sqlfluff [rs] >= 4.3.0',
