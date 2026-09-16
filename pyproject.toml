@@ -7,7 +7,7 @@ dev = [
   { include-group = 'lint' },
 ]
 lint = [
-  'ruff >= 0.16.7',
+  'ruff >= 0.16.8',
   'sqlfluff [rs] >= 4.3.0',
   'sqlfluff-templater-dbt',
 ]
