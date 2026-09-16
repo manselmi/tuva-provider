@@ -25,6 +25,7 @@ flags:
   cumulative_type_params: true
   latest_version_pointer_enabled_by_default: true
   require_corrected_analysis_fqns: true
+  require_generic_test_arguments_property: true
   require_ref_searches_node_package_before_root: true
   require_source_and_semantic_model_names_without_spaces: true
   require_sql_header_in_test_configs: true
