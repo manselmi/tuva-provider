@@ -2,10 +2,6 @@
 min_version = '2026.9.7'
 
 
-[env]
-DB = 'data/nppes.duckdb'
-
-
 [settings]
 locked = true
 lockfile = true
@@ -47,12 +43,11 @@ sources = [
 
 [tasks.default]
 run = [
-  { task = 'lint' },
   { task = 'dbt-build' },
 ]
 
 [tasks.dump]
-run = 'duckdb -bail -f dump.sql "${DB}"'
+run = 'uv run --no-dev --script -- nppes.py dump'
 
 [tasks.lint]
 depends = [
@@ -60,17 +55,18 @@ depends = [
 ]
 run = """\
 if test -n "${CI:-}"; then \
-  CMD='sqlfluff lint'; \
+  uv run --group lint -- sqlfluff lint; \
+  uv run --only-group lint -- ruff format --diff; \
+  uv run --only-group lint -- ruff check; \
 else \
-  CMD='sqlfluff fix --show-lint-violations'; \
+  uv run --group lint -- sqlfluff fix --show-lint-violations; \
+  uv run --only-group lint -- ruff format; \
+  uv run --only-group lint -- ruff check --fix; \
 fi; \
-uv run --group lint -- ${CMD}"""
+uv run --group lint -- mypy"""
 
 [tasks.load]
-run = [
-  'rm -f -- "${DB}"',
-  'duckdb -bail -f load.sql "${DB}"',
-]
+run = 'uv run --no-dev --script -- nppes.py load'
 
 [tasks.lock]
 # required to correctly initialize lockfile when locked = true
@@ -97,6 +93,5 @@ run = [
 
 
 [tools]
-duckdb = 'latest'
 python = '3.14'
 uv = 'latest'

@@ -7,6 +7,7 @@ dev = [
   { include-group = 'lint' },
 ]
 lint = [
+  'mypy >= 2.3.1',
   'ruff >= 0.16.8',
   'sqlfluff [rs] >= 4.3.0',
   'sqlfluff-templater-dbt',
@@ -23,7 +24,22 @@ requires-python = '~= 3.14.0'
 dependencies = [
   'dbt-core ~= 1.12.0',
   'dbt-duckdb >= 1.11.0',
+  'typer >= 0.27.2',
 ]
+
+
+[tool.mypy]
+allow_redefinition = true
+enable_incomplete_feature = [
+  'PreciseTupleTypes',
+]
+exclude_gitignore = true
+files = '**/*.py'
+install_types = false
+native_parser = true
+python_version = '3.14'  # https://github.com/python/mypy/issues/19349
+strict = true
+warn_unreachable = true
 
 
 [tool.ruff]
@@ -87,7 +103,6 @@ exclude_rules = [
 ]
 ignore_paths = [
   '.venv/',
-  '/*.sql',
   'dbt_internal_packages/',
   'dbt_modules/',
   'dbt_packages/',

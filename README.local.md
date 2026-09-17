@@ -5,7 +5,7 @@
 1. Download and move the data files referenced in the [README](./README.md) into the `raw`
    directory.
 
-1. Update the filenames near the top of `load.sql` to match the filenames of the data files from the
+1. Update the filenames near the top of `nppes.py` to match the filenames of the data files from the
    previous step.
 
 ## Load the raw data
