@@ -11,7 +11,9 @@ from duckdb import connect as _connect
 from typer import Typer
 
 if TYPE_CHECKING:
-    from duckdb import DuckDBPyConnection
+    from collections.abc import Iterable
+
+    from duckdb import DuckDBPyConnection, DuckDBPyRelation
 
 
 # https://github.com/duckdb/duckdb-python/blob/main/_duckdb-stubs/__init__.pyi
@@ -21,16 +23,24 @@ type Config = dict[str, str | bool | int | float | list[str]]
 RAW_DIR = Path(__file__).with_name("raw")
 DATA_DIR = Path(__file__).with_name("data")
 DATABASE = DATA_DIR.joinpath("nppes.duckdb")
+
+
 RAW_SCHEMA = "raw_data"
-CLAIMS_SCHEMA = "claims_data_model"
-
-
-NPI = RAW_DIR.joinpath("npidata_pfile_20050523-20260913.csv")
-NPI_OTHERNAME = RAW_DIR.joinpath("othername_pfile_20050523-20260913.csv")
-NUCC_TAXONOMY = RAW_DIR.joinpath("nucc_taxonomy_261.csv")
-MEDICARE_SPECIALTY_CROSSWALK = RAW_DIR.joinpath(
+NPI = (RAW_SCHEMA, "npi")
+NPI_CSV = RAW_DIR.joinpath("npidata_pfile_20050523-20260913.csv")
+NPI_OTHERNAME = (RAW_SCHEMA, "npi_othername")
+NPI_OTHERNAME_CSV = RAW_DIR.joinpath("othername_pfile_20050523-20260913.csv")
+NUCC_TAXONOMY = (RAW_SCHEMA, "nucc_taxonomy")
+NUCC_TAXONOMY_CSV = RAW_DIR.joinpath("nucc_taxonomy_261.csv")
+MEDICARE_SPECIALTY_CROSSWALK = (RAW_SCHEMA, "medicare_specialty_crosswalk")
+MEDICARE_SPECIALTY_CROSSWALK_CSV = RAW_DIR.joinpath(
     "Medicare_Provider_and_Supplier_Taxonomy_Crosswalk_August_2026.csv"
 )
+
+
+CLAIMS_SCHEMA = "claims_data_model"
+PROVIDER = (CLAIMS_SCHEMA, "provider")
+PROVIDER_PARQUET = DATA_DIR.joinpath("provider.parquet")
 
 
 GLOBAL_CONFIG: Config = {
@@ -56,11 +66,10 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
 
     con.execute(f"DROP SCHEMA IF EXISTS {quoted_schema} CASCADE")
     con.execute(f"CREATE SCHEMA {quoted_schema}")
-    con.execute(f"USE {quoted_schema}")
 
     con.execute(
         dedent(f"""\
-        CREATE TABLE npi AS
+        CREATE TABLE {quote_identifier(NPI)} AS
         SELECT *
             REPLACE (
                 npi::BIGINT AS npi,
@@ -71,7 +80,7 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
                 provider_organization_name_legal_business_name AS provider_organization_name
             )
         FROM read_csv(
-            {quote_string(NPI.as_posix())},
+            {quote_string(NPI_CSV.as_posix())},
             all_varchar = true,
             normalize_names = true
         )
@@ -80,13 +89,13 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
 
     con.execute(
         dedent(f"""\
-        CREATE TABLE npi_othername AS
+        CREATE TABLE {quote_identifier(NPI_OTHERNAME)} AS
         SELECT *
             REPLACE (
                 npi::BIGINT AS npi
             )
         FROM read_csv(
-            {quote_string(NPI_OTHERNAME.as_posix())},
+            {quote_string(NPI_OTHERNAME_CSV.as_posix())},
             all_varchar = true,
             normalize_names = true
         )
@@ -95,10 +104,10 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
 
     con.execute(
         dedent(f"""\
-        CREATE TABLE nucc_taxonomy AS
+        CREATE TABLE {quote_identifier(NUCC_TAXONOMY)} AS
         SELECT *
         FROM read_csv(
-            {quote_string(NUCC_TAXONOMY.as_posix())},
+            {quote_string(NUCC_TAXONOMY_CSV.as_posix())},
             all_varchar = true,
             normalize_names = true
         )
@@ -107,7 +116,7 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
 
     con.execute(
         dedent(f"""\
-        CREATE TABLE medicare_specialty_crosswalk AS
+        CREATE TABLE {quote_identifier(MEDICARE_SPECIALTY_CROSSWALK)} AS
         SELECT *
             RENAME (
                 medicare_providersupplier_type_description AS
@@ -116,7 +125,7 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
                     provider_taxonomy_description
             )
         FROM read_csv(
-            {quote_string(MEDICARE_SPECIALTY_CROSSWALK.as_posix())},
+            {quote_string(MEDICARE_SPECIALTY_CROSSWALK_CSV.as_posix())},
             all_varchar = true,
             normalize_names = true
         )
@@ -136,24 +145,14 @@ def dump() -> None:
 
 
 def dump_provider(con: DuckDBPyConnection, /) -> None:
-    con.execute(f"USE {quote_identifier(CLAIMS_SCHEMA)}")
-
-    rel = con.sql("SELECT * FROM provider")
+    rel = con.sql(f"SELECT * FROM {quote_identifier(PROVIDER)}")
     rel = rel.project(
         ", ".join(
             f"{quote_identifier(col)} AS {quote_identifier(col.upper())}" for col in rel.columns
         )
     ).sort("NPI")
 
-    con.execute(
-        dedent(f"""\
-        COPY rel
-        TO {quote_string(DATA_DIR.joinpath("provider.parquet").as_posix())}
-        WITH (
-          FORMAT parquet,
-          COMPRESSION zstd
-        )""")
-    )
+    dump_to_parquet(con, rel, PROVIDER_PARQUET)
 
 
 def connect(
@@ -177,8 +176,28 @@ def connect(
         return con
 
 
-def quote_identifier(identifier: str, /) -> str:
-    return f'"{identifier.replace('"', '""')}"'
+def dump_to_parquet(
+    con: DuckDBPyConnection,
+    rel: DuckDBPyRelation,  # noqa:ARG001
+    path: Path,
+    /,
+) -> None:
+    con.execute(
+        dedent(f"""\
+        COPY rel
+        TO {quote_string(path.as_posix())}
+        WITH (
+            FORMAT parquet,
+            COMPRESSION zstd,
+            PARQUET_VERSION V2
+        )""")
+    )
+
+
+def quote_identifier(identifier: str | Iterable[str], /) -> str:
+    if isinstance(identifier, str):
+        return f'"{identifier.replace('"', '""')}"'
+    return ".".join(map(quote_identifier, identifier))
 
 
 def quote_string(string_: str, /) -> str:
