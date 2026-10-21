@@ -1,4 +1,4 @@
-#!/usr/bin/env -S mise exec -- uv run --no-dev --script
+#!/usr/bin/env -S mise exec -- uv run --only-group nppes
 #
 # ruff:noqa:S608
 

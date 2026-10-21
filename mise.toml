@@ -1,5 +1,13 @@
-# https://github.com/jdx/mise/releases/tag/v2026.9.7
-min_version = '2026.9.7'
+#:schema https://mise.jdx.dev/schema/mise.json
+# vim: set ft=toml :
+#
+# https://mise.jdx.dev/configuration.html
+
+
+# Removes trust in the compromised eMudhra CA certificates.
+# https://github.com/jdx/mise/pull/14781
+# https://github.com/jdx/mise/releases/tag/v2026.10.17
+min_version = '2026.10.17'
 
 
 [settings]
@@ -47,7 +55,7 @@ run = [
 ]
 
 [tasks.dump]
-run = 'uv run --no-dev --script -- nppes.py dump'
+run = './nppes.py dump'
 
 [tasks.lint]
 depends = [
@@ -66,7 +74,7 @@ fi; \
 uv run --group lint -- mypy"""
 
 [tasks.load]
-run = 'uv run --no-dev --script -- nppes.py load'
+run = './nppes.py load'
 
 [tasks.lock]
 # required to correctly initialize lockfile when locked = true
