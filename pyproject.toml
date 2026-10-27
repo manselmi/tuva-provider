@@ -11,6 +11,7 @@ lint = [
   'ruff >= 0.17.3',
   'sqlfluff [rs] >= 4.4.0',
   'sqlfluff-templater-dbt',
+  { include-group = 'nppes' },
 ]
 nppes = [
   'typer >= 0.27.3',

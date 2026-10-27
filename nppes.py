@@ -7,12 +7,10 @@ from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
-from duckdb import connect as _connect
+from duckdb import col, connect as _connect
 from typer import Typer
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from duckdb import DuckDBPyConnection, DuckDBPyRelation
 
 
@@ -62,14 +60,14 @@ def load() -> None:
 
 
 def load_raw_schema(con: DuckDBPyConnection, /) -> None:
-    quoted_schema = quote_identifier(RAW_SCHEMA)
+    schema = col(RAW_SCHEMA)
 
-    con.execute(f"DROP SCHEMA IF EXISTS {quoted_schema} CASCADE")
-    con.execute(f"CREATE SCHEMA {quoted_schema}")
+    con.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
+    con.execute(f"CREATE SCHEMA {schema}")
 
     con.execute(
         dedent(f"""\
-        CREATE TABLE {quote_identifier(NPI)} AS
+        CREATE TABLE {col(*NPI)} AS
         SELECT *
             REPLACE (
                 npi::BIGINT AS npi,
@@ -89,7 +87,7 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
 
     con.execute(
         dedent(f"""\
-        CREATE TABLE {quote_identifier(NPI_OTHERNAME)} AS
+        CREATE TABLE {col(*NPI_OTHERNAME)} AS
         SELECT *
             REPLACE (
                 npi::BIGINT AS npi
@@ -104,7 +102,7 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
 
     con.execute(
         dedent(f"""\
-        CREATE TABLE {quote_identifier(NUCC_TAXONOMY)} AS
+        CREATE TABLE {col(*NUCC_TAXONOMY)} AS
         SELECT *
         FROM read_csv(
             {quote_string(NUCC_TAXONOMY_CSV.as_posix())},
@@ -116,7 +114,7 @@ def load_raw_schema(con: DuckDBPyConnection, /) -> None:
 
     con.execute(
         dedent(f"""\
-        CREATE TABLE {quote_identifier(MEDICARE_SPECIALTY_CROSSWALK)} AS
+        CREATE TABLE {col(*MEDICARE_SPECIALTY_CROSSWALK)} AS
         SELECT *
             RENAME (
                 medicare_providersupplier_type_description AS
@@ -145,11 +143,9 @@ def dump() -> None:
 
 
 def dump_provider(con: DuckDBPyConnection, /) -> None:
-    rel = con.sql(f"SELECT * FROM {quote_identifier(PROVIDER)}")
+    rel = con.sql(f"SELECT * FROM {col(*PROVIDER)}")
     rel = rel.project(
-        ", ".join(
-            f"{quote_identifier(col)} AS {quote_identifier(col.upper())}" for col in rel.columns
-        )
+        ", ".join(f"{col(col_name)} AS {col(col_name.upper())}" for col_name in rel.columns)
     ).sort("NPI")
 
     dump_to_parquet(con, rel, PROVIDER_PARQUET)
@@ -167,7 +163,7 @@ def connect(
     try:
         con = _connect(database, read_only=read_only, config=global_config)
         for key, value in (local_config or {}).items():
-            con.execute(f"SET {quote_identifier(key)} = ?", [value])
+            con.execute(f"SET {col(key)} = ?", [value])
     except:
         if con:
             con.close()
@@ -192,12 +188,6 @@ def dump_to_parquet(
             PARQUET_VERSION V2
         )""")
     )
-
-
-def quote_identifier(identifier: str | Iterable[str], /) -> str:
-    if isinstance(identifier, str):
-        return f'"{identifier.replace('"', '""')}"'
-    return ".".join(map(quote_identifier, identifier))
 
 
 def quote_string(string_: str, /) -> str:
