@@ -8,7 +8,7 @@ dev = [
 ]
 lint = [
   'mypy >= 2.4.0',
-  'ruff >= 0.17.1',
+  'ruff >= 0.17.3',
   'sqlfluff [rs] >= 4.4.0',
   'sqlfluff-templater-dbt',
 ]
@@ -26,7 +26,7 @@ Project."""
 requires-python = '~= 3.14.0'
 dependencies = [
   'dbt-core ~= 1.12.0',
-  'dbt-duckdb >= 1.11.0',
+  'dbt-duckdb >= 1.11.1',
 ]
 
 
@@ -156,4 +156,9 @@ profiles_dir = '.'
 
 
 [tool.uv]
+environments = [
+  'sys_platform == "linux" and platform_machine == "aarch64"',
+  'sys_platform == "linux" and platform_machine == "x86_64"',
+  'sys_platform == "darwin" and platform_machine == "arm64"',
+]
 package = false
