@@ -25,9 +25,9 @@ DATABASE = DATA_DIR.joinpath("nppes.duckdb")
 
 RAW_SCHEMA = "raw_data"
 NPI = (RAW_SCHEMA, "npi")
-NPI_CSV = RAW_DIR.joinpath("npidata_pfile_20050523-20260913.csv")
+NPI_CSV = RAW_DIR.joinpath("npidata_pfile_20050523-20261011.csv")
 NPI_OTHERNAME = (RAW_SCHEMA, "npi_othername")
-NPI_OTHERNAME_CSV = RAW_DIR.joinpath("othername_pfile_20050523-20260913.csv")
+NPI_OTHERNAME_CSV = RAW_DIR.joinpath("othername_pfile_20050523-20261011.csv")
 NUCC_TAXONOMY = (RAW_SCHEMA, "nucc_taxonomy")
 NUCC_TAXONOMY_CSV = RAW_DIR.joinpath("nucc_taxonomy_261.csv")
 MEDICARE_SPECIALTY_CROSSWALK = (RAW_SCHEMA, "medicare_specialty_crosswalk")
