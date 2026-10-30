@@ -144,9 +144,7 @@ def dump() -> None:
 
 def dump_provider(con: DuckDBPyConnection, /) -> None:
     rel = con.sql(f"SELECT * FROM {col(*PROVIDER)}")
-    rel = rel.project(
-        ", ".join(f"{col(col_name)} AS {col(col_name.upper())}" for col_name in rel.columns)
-    ).sort("NPI")
+    rel = rel.select(*[col(name).alias(name.upper()) for name in rel.columns]).sort("NPI")
 
     dump_to_parquet(con, rel, PROVIDER_PARQUET)
 
