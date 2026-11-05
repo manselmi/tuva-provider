@@ -4,10 +4,10 @@
 # https://mise.jdx.dev/configuration.html
 
 
-# Removes trust in the compromised eMudhra CA certificates.
-# https://github.com/jdx/mise/pull/14781
-# https://github.com/jdx/mise/releases/tag/v2026.10.17
-min_version = '2026.10.17'
+# Lockfile format version 4
+# https://github.com/jdx/mise/pull/15338
+# https://github.com/jdx/mise/releases/tag/v2026.11.1
+min_version = '2026.11.1'
 
 
 [settings]
